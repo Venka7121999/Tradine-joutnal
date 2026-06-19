@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Pivot Grid — CPR Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0C10;
+    --panel:#12161C;
+    --panel-2:#181D24;
+    --border:#232A33;
+    --border-soft:#1B2128;
+    --text:#E8EAED;
+    --text-dim:#8B93A1;
+    --text-faint:#5A6170;
+    --res:#FF6B47;
+    --res-dim:rgba(255,107,71,0.10);
+    --res-border:rgba(255,107,71,0.35);
+    --sup:#2ED9A3;
+    --sup-dim:rgba(46,217,163,0.10);
+    --sup-border:rgba(46,217,163,0.35);
+    --pivot:#F5C242;
+    --pivot-dim:rgba(245,194,66,0.10);
+    --pivot-border:rgba(245,194,66,0.35);
+    --round:#4FA8FF;
+    --round-dim:rgba(79,168,255,0.08);
+    --round-border:rgba(79,168,255,0.45);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding:24px 14px 60px;
+  }
+  .app{
+    width:100%;
+    max-width:440px;
+  }
+  .header{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    margin-bottom:18px;
+    padding-bottom:14px;
+    border-bottom:1px solid var(--border);
+  }
+  .header .brand{
+    font-family:'Oswald',sans-serif;
+    font-weight:700;
+    font-size:22px;
+    letter-spacing:0.5px;
+    text-transform:uppercase;
+  }
+  .header .brand span{ color:var(--pivot); }
+  .quote-bar{
+    font-family:'Inter',sans-serif;
+    font-style:italic;
+    font-weight:400;
+    font-size:12px;
+    color:var(--text-dim);
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-left:3px solid var(--pivot);
+    border-radius:8px;
+    padding:10px 12px;
+    margin-bottom:14px;
+    line-height:1.5;
+  }
+  .header .tag{
+    font-size:10px;
+    color:var(--text-faint);
+    text-transform:uppercase;
+    letter-spacing:1.5px;
+    font-weight:600;
+  }
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:16px;
+    margin-bottom:14px;
+  }
+
+  .label-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:10px;
+  }
+  .section-title{
+    font-family:'Oswald',sans-serif;
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:1.2px;
+    color:var(--text-dim);
+    font-weight:600;
+  }
+
+  .input-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:8px;
+    margin-bottom:12px;
+  }
+  .field{
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+  }
+  .field label{
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    color:var(--text-faint);
+    font-weight:600;
+  }
+  .field input{
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    border-radius:6px;
+    color:var(--text);
+    font-family:'JetBrains Mono',monospace;
+    font-size:14px;
+    font-weight:500;
+    padding:9px 8px;
+    width:100%;
+    outline:none;
+    transition:border-color .15s;
+  }
+  .field input:focus{ border-color:var(--pivot); }
+  .field.high input{ color:var(--res); }
+  .field.low input{ color:var(--sup); }
+
+  .warn{
+    margin-top:10px;
+    font-size:11px;
+    color:var(--res);
+    background:var(--res-dim);
+    border:1px solid var(--res-border);
+    border-radius:6px;
+    padding:8px 10px;
+    display:none;
+  }
+
+  .width-card{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .width-info .w-val{
+    font-family:'JetBrains Mono',monospace;
+    font-size:20px;
+    font-weight:600;
+  }
+  .width-info .w-sub{
+    font-size:10px;
+    color:var(--text-faint);
+    margin-top:2px;
+  }
+  .width-badge{
+    font-family:'Oswald',sans-serif;
+    font-size:11px;
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:0.8px;
+    padding:6px 12px;
+    border-radius:20px;
+    text-align:center;
+  }
+  .width-badge.narrow{ background:var(--sup-dim); color:var(--sup); border:1px solid var(--sup-border); }
+  .width-badge.narrow-mixed{ background:rgba(95,217,208,0.10); color:#5FD9D0; border:1px solid rgba(95,217,208,0.4); }
+  .width-badge.mixed{ background:var(--pivot-dim); color:var(--pivot); border:1px solid var(--pivot-border); }
+  .width-badge.mixed-wider{ background:rgba(255,159,90,0.10); color:#FF9F5A; border:1px solid rgba(255,159,90,0.4); }
+  .width-badge.wider{ background:var(--res-dim); color:var(--res); border:1px solid var(--res-border); }
+  .width-note{
+    font-size:10.5px;
+    color:var(--text-faint);
+    margin-top:10px;
+    line-height:1.5;
+    border-top:1px solid var(--border-soft);
+    padding-top:10px;
+  }
+  .width-card{ flex-wrap:wrap; }
+
+  .ladder{
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+  }
+  .rung{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:9px 12px;
+    border-radius:7px;
+    border:1px solid var(--border);
+  }
+  .rung .rlabel{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    font-family:'Oswald',sans-serif;
+    font-size:12.5px;
+    font-weight:600;
+    letter-spacing:0.3px;
+  }
+  .rung .rvalue{
+    font-family:'JetBrains Mono',monospace;
+    font-size:14.5px;
+    font-weight:600;
+  }
+  .tag{
+    font-size:8.5px;
+    font-weight:700;
+    letter-spacing:0.5px;
+    padding:2px 5px;
+    border-radius:4px;
+  }
+  .rung.res{ background:var(--res-dim); border-color:var(--res-border); }
+  .rung.res .rvalue, .rung.res .rlabel{ color:var(--res); }
+  .rung.sup{ background:var(--sup-dim); border-color:var(--sup-border); }
+  .rung.sup .rvalue, .rung.sup .rlabel{ color:var(--sup); }
+  .rung.pivot{ background:var(--pivot-dim); border-color:var(--pivot-border); }
+  .rung.pivot .rvalue, .rung.pivot .rlabel{ color:var(--pivot); }
+  .rung.round{ background:var(--round-dim); border-color:var(--round-border); border-style:dashed; }
+  .rung.round .rvalue, .rung.round .rlabel{ color:var(--round); }
+  .rung.round .tag{ background:var(--round); color:#06121f; }
+  .round-empty{
+    font-size:11.5px;
+    color:var(--text-faint);
+    padding:8px 2px;
+    text-align:center;
+  }
+
+  .empty-state{
+    text-align:center;
+    padding:30px 10px;
+    color:var(--text-faint);
+    font-size:12.5px;
+    line-height:1.6;
+  }
+  .empty-state .big{
+    font-family:'Oswald',sans-serif;
+    font-size:14px;
+    color:var(--text-dim);
+    margin-bottom:6px;
+    font-weight:600;
+  }
+
+  .footer-note{
+    text-align:center;
+    color:var(--text-faint);
+    font-size:10px;
+    margin-top:18px;
+    letter-spacing:0.3px;
+  }
+
+  .rules-card{ margin-top:0; }
+  .rule-row{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    padding:9px 0;
+    border-top:1px solid var(--border-soft);
+    font-size:12.5px;
+    color:var(--text-dim);
+    line-height:1.4;
+  }
+  .rule-row:first-of-type{ border-top:none; padding-top:2px; }
+  .rule-num{
+    flex:0 0 auto;
+    width:18px;
+    height:18px;
+    border-radius:50%;
+    background:var(--pivot-dim);
+    border:1px solid var(--pivot-border);
+    color:var(--pivot);
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;
+    font-weight:700;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <div>
+      <div class="brand">PIVOT<span>GRID</span></div>
+      <div class="tag">CPR · Pivot Calculator</div>
+    </div>
+  </div>
+
+  <div class="quote-bar" id="quoteBar"></div>
+
+  <div class="card">
+    <div class="label-row"><span class="section-title">Previous Day OHLC</span></div>
+    <div class="input-grid">
+      <div class="field high">
+        <label>High</label>
+        <input type="number" id="inHigh" inputmode="decimal" placeholder="0.00">
+      </div>
+      <div class="field low">
+        <label>Low</label>
+        <input type="number" id="inLow" inputmode="decimal" placeholder="0.00">
+      </div>
+      <div class="field">
+        <label>Close</label>
+        <input type="number" id="inClose" inputmode="decimal" placeholder="0.00">
+      </div>
+    </div>
+
+    <div class="warn" id="warnBox"></div>
+  </div>
+
+  <div id="resultsWrap">
+    <div class="empty-state">
+      <div class="big">Enter High, Low &amp; Close</div>
+      Pivot, CPR, R1–R4 / S1–S4 and round-number levels will appear here.
+    </div>
+  </div>
+
+  <div class="card rules-card">
+    <div class="label-row"><span class="section-title">Trading Rules</span></div>
+    <div class="rule-row"><span class="rule-num">1</span><span>If TC breaks, goes to R1 — R2</span></div>
+    <div class="rule-row"><span class="rule-num">2</span><span>If BC breaks, goes to S1 — S2</span></div>
+    <div class="rule-row"><span class="rule-num">3</span><span>Don't trade in the TC to BC level</span></div>
+  </div>
+
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const inHigh = $('inHigh'), inLow = $('inLow'), inClose = $('inClose');
+  const warnBox = $('warnBox');
+  const resultsWrap = $('resultsWrap');
+
+  [inHigh, inLow, inClose].forEach(el => el.addEventListener('input', calculate));
+
+  function fmt(n){
+    return n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  const QUOTES = [
+    "Plan the trade, trade the plan — discipline beats prediction.",
+    "The market doesn't owe you a trade. Wait for your setup.",
+    "Cut losses fast, let winners run — the oldest rule, still the hardest.",
+    "Risk management is the only edge that never stops working.",
+    "A good trader isn't always right — just always controlled.",
+    "Overtrading is the fastest way to turn an edge into a loss.",
+    "Your stop loss is not a suggestion. Respect it.",
+    "Consistency comes from process, not from one big win.",
+    "The best trade is sometimes no trade at all.",
+    "Revenge trading has never once paid off — let it go and reset.",
+    "Capital protection today funds tomorrow's opportunity.",
+    "Trends end, ranges end — only your process should stay constant.",
+    "Trade the chart in front of you, not the one you wish you saw.",
+    "Small consistent gains compound louder than one lucky trade.",
+    "Patience is a position too.",
+  ];
+
+  function dailyQuote(){
+    const now = new Date();
+    const start = new Date(now.getFullYear(), 0, 0);
+    const diff = now - start;
+    const dayOfYear = Math.floor(diff / 86400000);
+    return QUOTES[dayOfYear % QUOTES.length];
+  }
+
+  document.getElementById('quoteBar').textContent = '\u201C' + dailyQuote() + '\u201D';
+
+  const ROUND_STEP = 50; // covers Nifty (50) and BankNifty/Sensex (100, a multiple of 50)
+
+  function roundLevelsBetween(lo, hi){
+    const levels = [];
+    let start = Math.ceil(lo / ROUND_STEP) * ROUND_STEP;
+    for(let v = start; v <= hi + 1e-9; v += ROUND_STEP){
+      if(v > lo + 1e-9 && v < hi - 1e-9){
+        levels.push(v);
+      }
+    }
+    return levels;
+  }
+
+  function calculate(){
+    const H = parseFloat(inHigh.value);
+    const L = parseFloat(inLow.value);
+    const C = parseFloat(inClose.value);
+
+    if(isNaN(H) || isNaN(L) || isNaN(C)){
+      warnBox.style.display = 'none';
+      resultsWrap.innerHTML = `
+        <div class="empty-state">
+          <div class="big">Enter High, Low &amp; Close</div>
+          Pivot, CPR, R1–R4 / S1–S4 and round-number levels will appear here.
+        </div>`;
+      return;
+    }
+
+    let warnMsg = '';
+    if(L > H){ warnMsg = 'Low is greater than High — check your entries.'; }
+    else if(C < L || C > H){ warnMsg = 'Close is outside the High–Low range — double-check before trusting these levels.'; }
+
+    if(warnMsg){
+      warnBox.style.display = 'block';
+      warnBox.textContent = warnMsg;
+    } else {
+      warnBox.style.display = 'none';
+    }
+
+    const P = (H + L + C) / 3;
+    const bcCalc = (H + L) / 2;
+    const tcCalc = (P * 2) - bcCalc;
+    const TC = Math.max(tcCalc, bcCalc);
+    const BC = Math.min(tcCalc, bcCalc);
+
+    const R1 = (P * 2) - L;
+    const R2 = P + (H - L);
+    const R3 = H + 2 * (P - L);
+    const R4 = R3 + (R2 - R1);
+
+    const S1 = (P * 2) - H;
+    const S2 = P - (H - L);
+    const S3 = L - 2 * (H - P);
+    const S4 = S3 - (S1 - S2);
+
+    const cprWidth = Math.abs(TC - BC);
+    const widthPct = (cprWidth / C) * 100;
+
+    let widthClass, widthLabel, widthNote;
+
+    if(widthPct < 0.3){
+      if(cprWidth <= 38){
+        widthClass = 'narrow'; widthLabel = 'Narrow CPR';
+        widthNote = 'Narrow % and narrow width agree — trending market.';
+      } else {
+        widthClass = 'narrow-mixed'; widthLabel = 'Narrow + Mixed CPR';
+        widthNote = '% says narrow but width has stretched past 38 pts — trending, sideways possible.';
+      }
+    } else if(widthPct < 0.4){
+      widthClass = 'narrow-mixed'; widthLabel = 'Narrow + Mixed CPR';
+      widthNote = '% is in the narrow–mixed transition zone — trending, sideways possible.';
+    } else if(widthPct <= 0.6){
+      if(cprWidth >= 39 && cprWidth <= 70){
+        widthClass = 'mixed'; widthLabel = 'Mixed CPR';
+        widthNote = '% and width both confirm mixed zone — trending, sideways.';
+      } else if(cprWidth > 70){
+        widthClass = 'mixed-wider'; widthLabel = 'Mixed + Wider CPR';
+        widthNote = '% is mid-range but width has pushed past 70 pts — rangebound, sideways.';
+      } else {
+        widthClass = 'narrow-mixed'; widthLabel = 'Narrow + Mixed CPR';
+        widthNote = '% is in the mixed band but width is under 39 pts — trending, sideways.';
+      }
+    } else {
+      if(cprWidth >= 71){
+        widthClass = 'wider'; widthLabel = 'Wider CPR';
+        widthNote = '% and width both confirm wide CPR — rangebound, sideways.';
+      } else {
+        widthClass = 'mixed-wider'; widthLabel = 'Mixed + Wider CPR';
+        widthNote = '% says wide but width is under 70 pts — rangebound, sideways, don\'t fully commit to a clean range-day read.';
+      }
+    }
+
+    const roundRes = roundLevelsBetween(Math.min(R1,R2), Math.max(R1,R2));
+    const roundSup = roundLevelsBetween(Math.min(S2,S1), Math.max(S2,S1));
+
+    const rows = [
+      { label:'R4', value:R4, cls:'res' },
+      { label:'R3', value:R3, cls:'res' },
+      { label:'R2', value:R2, cls:'res' },
+      { label:'R1', value:R1, cls:'res' },
+      { label:'TC', value:TC, cls:'pivot' },
+      { label:'Pivot', value:P, cls:'pivot' },
+      { label:'BC', value:BC, cls:'pivot' },
+      { label:'S1', value:S1, cls:'sup' },
+      { label:'S2', value:S2, cls:'sup' },
+      { label:'S3', value:S3, cls:'sup' },
+      { label:'S4', value:S4, cls:'sup' },
+    ].sort((a,b) => b.value - a.value);
+
+    const ladderHtml = rows.map(r => `
+      <div class="rung ${r.cls}">
+        <div class="rlabel">${r.label}</div>
+        <div class="rvalue">${fmt(r.value)}</div>
+      </div>
+    `).join('');
+
+    const roundResHtml = roundRes.length
+      ? roundRes.map(v => `
+        <div class="rung round">
+          <div class="rlabel">Round Resistance<span class="tag">RND</span></div>
+          <div class="rvalue">${fmt(v)}</div>
+        </div>`).join('')
+      : `<div class="round-empty">No round number between R1 and R2</div>`;
+
+    const roundSupHtml = roundSup.length
+      ? roundSup.map(v => `
+        <div class="rung round">
+          <div class="rlabel">Round Support<span class="tag">RND</span></div>
+          <div class="rvalue">${fmt(v)}</div>
+        </div>`).join('')
+      : `<div class="round-empty">No round number between S1 and S2</div>`;
+
+    resultsWrap.innerHTML = `
+      <div class="card width-card">
+        <div class="width-info">
+          <div class="w-val">${fmt(cprWidth)}</div>
+          <div class="w-sub">CPR Width (TC−BC) · ${widthPct.toFixed(2)}% of Close</div>
+        </div>
+        <div class="width-badge ${widthClass}">${widthLabel}</div>
+        <div class="width-note">${widthNote}</div>
+      </div>
+
+      <div class="card">
+        <div class="label-row"><span class="section-title">Full Pivot Ladder</span></div>
+        <div class="ladder">${ladderHtml}</div>
+      </div>
+
+      <div class="card">
+        <div class="label-row"><span class="section-title">Round Numbers</span></div>
+        <div class="ladder">${roundResHtml}${roundSupHtml}</div>
+      </div>
+    `;
+  }
+</script>
+</body>
+</html>
